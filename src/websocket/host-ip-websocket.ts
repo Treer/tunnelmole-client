@@ -2,6 +2,8 @@ import WebSocket from 'ws';
 
 export default class HostipWebSocket extends WebSocket
 {
+    sockets?: Map<string, WebSocket>
+	
     constructor(endpoint: string) {
         super(endpoint);
     }

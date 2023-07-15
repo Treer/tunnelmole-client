@@ -140,5 +140,13 @@ const buildWebSocket = (options: Options, reconnect = false): HostipWebSocket =>
         console.error(error);
     });
 
+    // Stop when the websocket closes
+    websocket.on('close', (error) => {
+        // TODO: Reconnect  ... or perhaps this is done now?
+        websocket.sockets?.forEach(
+        (socket) => socket.readyState === 1 && socket.close()
+        )
+    })
+
     return websocket;
 }
