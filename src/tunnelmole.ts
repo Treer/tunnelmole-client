@@ -26,7 +26,6 @@ export default async function tunnelmole(options : Options): Promise<string>
        return;
     }
 
-
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 3;
 
@@ -62,7 +61,16 @@ export default async function tunnelmole(options : Options): Promise<string>
 }
 
 const buildWebSocket = (options: Options, reconnect = false): HostipWebSocket => {
-    const websocket = new HostipWebSocket(config.hostip.endpoint);
+    const url = new URL(config.hostip.endpoint)
+    const ssl = !options.domain.includes('localhost')
+    if (options.domain) {
+        url.port = ssl ? '443' : '80'
+        url.host = options.domain
+        // if (url.host.includes('localhost')) url.hostname = '127.0.0.1'
+    }
+    if (!ssl) url.protocol = 'ws'
+
+    const websocket = new HostipWebSocket(url);
 
     const sendInitialiseMessage = async () => {
         log("Sending initialise message");
