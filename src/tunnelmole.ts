@@ -12,7 +12,7 @@ import { initStorage } from './node-persist/storage.js';
 import { eventHandler, URL_ASSIGNED } from './events/event-handler.js';
 import { DO_NOT_RECONNECT } from './websocket/custom-events.js';
 
-export default async function tunnelmole(options : Options): Promise<string>
+export default async function tunnelmole(options : Options)
 {
     await initStorage();
     await initialiseClientId();
@@ -39,6 +39,11 @@ export default async function tunnelmole(options : Options): Promise<string>
         const websocket = buildWebSocket(options, isReconnect);
 
         websocket.on('close', (code) => {
+			// Stop sockets when the websocket closes
+			websocket.sockets?.forEach(
+				(socket) => socket.readyState === 1 && socket.close()
+			)
+			
             // Do not reconnect if the server asked us not to
             if (code === DO_NOT_RECONNECT) {
                 return;
@@ -53,22 +58,26 @@ export default async function tunnelmole(options : Options): Promise<string>
     connect();
 
     // Listen for the URL assigned event and return it
-    return new Promise((resolve) => {
+    return new Promise<{url:string,on:(type:'error'|'close',callback:()=>void)=>void,close:()=>void}>((resolve) => {
         eventHandler.on(URL_ASSIGNED, (url: string) => {
-            resolve(url);
+            resolve({
+                url,
+                on: () => {},
+                close: () => websocket.close()
+            });
         })
-    });
+    });	
 }
 
 const buildWebSocket = (options: Options, reconnect = false): HostipWebSocket => {
     const url = new URL(config.hostip.endpoint)
-    const ssl = !options.domain.includes('localhost')
     if (options.domain) {
+        const ssl = !options.domain.includes('localhost')
         url.port = ssl ? '443' : '80'
         url.host = options.domain
         // if (url.host.includes('localhost')) url.hostname = '127.0.0.1'
+        if (!ssl) url.protocol = 'ws'
     }
-    if (!ssl) url.protocol = 'ws'
 
     const websocket = new HostipWebSocket(url);
 
@@ -139,14 +148,6 @@ const buildWebSocket = (options: Options, reconnect = false): HostipWebSocket =>
         log(Date.now() + "Caught an error:", "error");
         console.error(error);
     });
-
-    // Stop when the websocket closes
-    websocket.on('close', (error) => {
-        // TODO: Reconnect  ... or perhaps this is done now?
-        websocket.sockets?.forEach(
-        (socket) => socket.readyState === 1 && socket.close()
-        )
-    })
 
     return websocket;
 }
