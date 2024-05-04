@@ -50,9 +50,9 @@ function WebSocketOpenMessage(forwardedRequestMessage, websocket, options) {
   websocket.sockets.set(socketId, datatunnel)
 
   // Forward messages from client to server
-  // console.log('WebSocketOpenMessage.ready', datatunnel.readyState)
+  console.log('WebSocketOpenMessage.ready', datatunnel.readyState)
   datatunnel.on('open', () => {
-    // console.log('WebSocketOpenMessage.open', datatunnel.readyState)
+    console.log('WebSocketOpenMessage.open', datatunnel.readyState)
   })
   datatunnel.on('message', (data) => {
     const message = { type: 'WebSocketClientMessage', socketId, data }

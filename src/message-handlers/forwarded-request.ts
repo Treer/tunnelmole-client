@@ -23,6 +23,8 @@ export default async function forwardedRequest(forwardedRequestMessage: Forwarde
         headers
     };
 
+    delete requestOptions.headers["X-Forwarded-For"];
+
     const request = http.request(requestOptions, (response : http.IncomingMessage) => {
         let responseBody : Buffer;
         response.on('data', (chunk: Buffer) => {

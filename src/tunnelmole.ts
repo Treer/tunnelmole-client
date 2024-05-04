@@ -71,14 +71,17 @@ export default async function tunnelmole(options : Options)
 
 const buildWebSocket = (options: Options, reconnect = false): HostipWebSocket => {
     const url = new URL(config.hostip.endpoint)
+/*
     if (options.domain) {
         const ssl = !options.domain.includes('localhost')
-        url.port = ssl ? '443' : '80'
-        url.host = options.domain
+        url.port     = ssl ? '443' : '80'
+        url.protocol = ssl ? 'wss' : 'ws'
+        //url.host = options.domain
         // if (url.host.includes('localhost')) url.hostname = '127.0.0.1'
-        if (!ssl) url.protocol = 'ws'
-    }
+        //if (!ssl) url.protocol = 'ws'
+    }*/
 
+    log("Websocket url: " + url);
     const websocket = new HostipWebSocket(url);
 
     const sendInitialiseMessage = async () => {
@@ -90,10 +93,14 @@ const buildWebSocket = (options: Options, reconnect = false): HostipWebSocket =>
             reconnect
         };
 
+        console.log("sdghj")
         // Set api key if we have one available
         const apiKey = await getApiKey();
         if (typeof apiKey === 'string') {
+            log("apikey" + apiKey);
             initialiseMessage.apiKey = apiKey;
+        } else {
+            log("no apikey");
         }
 
         // Handle passed subdomain param if present
@@ -117,7 +124,9 @@ const buildWebSocket = (options: Options, reconnect = false): HostipWebSocket =>
         websocket.sendMessage(initialiseMessage);
     }
 
+    log("1");
     websocket.on('open', sendInitialiseMessage);
+    log("2");
 
     websocket.on('message', (text : string) => {
         const message = JSON.parse(text);
@@ -135,6 +144,7 @@ const buildWebSocket = (options: Options, reconnect = false): HostipWebSocket =>
 
         handler(message, websocket, options);
     });
+    log("3");
 
     // Log messages if debug is enabled
     websocket.on('message', (text: string) => {
