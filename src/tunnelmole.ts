@@ -26,14 +26,17 @@ export default async function tunnelmole(options : Options)
     }
 
     const url = new URL(config.hostip.endpoint)
+/*
     if (options.domain) {
         const ssl = !options.domain.includes('localhost')
-        url.port = ssl ? '443' : '80'
-        url.host = options.domain
+        url.port     = ssl ? '443' : '80'
+        url.protocol = ssl ? 'wss' : 'ws'
+        //url.host = options.domain
         // if (url.host.includes('localhost')) url.hostname = '127.0.0.1'
-        if (!ssl) url.protocol = 'ws'
-    }
+        //if (!ssl) url.protocol = 'ws'
+    }*/
 
+    log("Websocket url: " + url);
     const websocket = new HostipWebSocket(url);
     const websocketIsReady = websocket.readyState === 1;
 
@@ -45,10 +48,14 @@ export default async function tunnelmole(options : Options)
             clientId: await getClientId()
         };
 
+        console.log("sdghj")
         // Set api key if we have one available
         const apiKey = await getApiKey();
         if (typeof apiKey === 'string') {
+            log("apikey" + apiKey);
             initialiseMessage.apiKey = apiKey;
+        } else {
+            log("no apikey");
         }
 
         // Handle passed subdomain param if present
@@ -72,13 +79,16 @@ export default async function tunnelmole(options : Options)
         websocket.sendMessage(initialiseMessage);
     }
 
+    log("1");
     // There seems to be a bug where on a second run, the websocket is re-used and is in a ready state
     // Send initialise message now if this is the case, otherwise set the open event to trigger the initialise message
     if (websocketIsReady) {
+        log("1a");
         sendInitialiseMessage();
     } else {
         websocket.on('open', sendInitialiseMessage);
     }
+    log("2");
 
     websocket.on('message', (text : string) => {
         const message = JSON.parse(text);
@@ -96,6 +106,7 @@ export default async function tunnelmole(options : Options)
 
         handler(message, websocket, options);
     });
+    log("3");
 
     // Log messages if debug is enabled
     websocket.on('message', (text: string) => {
@@ -117,10 +128,13 @@ export default async function tunnelmole(options : Options)
         (socket) => socket.readyState === 1 && socket.close()
         )
     })
+    log("4");
 
     // Listen for the URL assigned event and return it
     return new Promise<{url:string,on:(type:'error'|'close',callback:()=>void)=>void,close:()=>void}>((resolve) => {
+            log("5");
         eventHandler.on(URL_ASSIGNED, (url: string) => {
+            log("6");
             resolve({
                 url,
                 on: () => {},

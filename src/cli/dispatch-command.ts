@@ -4,6 +4,7 @@ import { Options } from "../options.js";
 import isNumber from 'is-number';
 import { setApiKey } from "../identity/api-key-service.js";
 import { unreserveDomain } from "../domains/unreseve-domain.js";
+import { inspect } from 'util'
 
 /**
  * Build Options from the command line input, then pass them off to tunnelmole()
@@ -30,6 +31,8 @@ export default async function dispatchCommand(arg0 : any, command : Command) {
         await handler(command[routeOption]);
         return Promise.resolve();
     }
+
+    console.info('Options: ' + inspect(options));
 
     if (options.port) {
         // We have enough to Launch Tunnelmole
